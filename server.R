@@ -102,7 +102,7 @@ server <- function(input, output, session) {
         -temp_db_draw$F_Price * exp(-temp_db_draw$Interest_Rate_Cont * temp_db_draw$TtM)
       temp_db_draw$Asset <- temp_db_draw$Stock_Price
       temp_db_draw$'Forward Value' <-
-        temp_db_draw$Liability + temp_db_draw$Stock_Price
+        round(temp_db_draw$Liability + temp_db_draw$Stock_Price, 1)
       
       #Composing XTS
       temp_xts_draw <-
@@ -111,21 +111,51 @@ server <- function(input, output, session) {
       
       #Deciding whether Asset, Liability of Off Balance
       
-      temp_db_asset <-
-        cbind.data.frame(
-          "1",
-          as.character(input$subsequentPricingDate),
-          tail(temp_db_draw$'Forward Value', 1),
-          1
-        )
-      names(temp_db_asset) <-
-        c("Derivative_ID",
-          "Pricing_Date",
-          "Fair_Value",
-          "Mark_to_Model") # set header to df
-      dbWriteTable(db, "Asset", temp_db_asset, append = TRUE)
+      if (tail(temp_db_draw$'Forward Value', 1) > 0) {
+        #Asset
+        
+        temp_db_asset <-
+          cbind.data.frame(
+            "1",
+            as.character(input$subsequentPricingDate),
+            tail(temp_db_draw$'Forward Value', 1),
+            1
+          )
+        names(temp_db_asset) <-
+          c("Derivative_ID",
+            "Pricing_Date",
+            "Fair_Value",
+            "Mark_to_Model") # set header to df
+        dbWriteTable(db, "Asset", temp_db_asset, append = TRUE)
+        
+      } else if (tail(temp_db_draw$'Forward Value', 1) < 0) {
+        #Liability
+        
+        temp_db_liability <-
+          cbind.data.frame(
+            "1",
+            as.character(input$subsequentPricingDate),
+            tail(temp_db_draw$'Forward Value', 1),
+            1
+          )
+        names(temp_db_liability) <-
+          c("Derivative_ID",
+            "Pricing_Date",
+            "Fair_Value",
+            "Mark_to_Model") # set header to df
+        dbWriteTable(db, "Liability", temp_db_liability, append = TRUE)
+      } 
       
-      
+      else {
+        # Off_Balance
+        temp_db_off_balance <-
+          cbind.data.frame("1",
+                           as.character(input$subsequentPricingDate))
+        names(temp_db_off_balance) <-
+          c("Derivative_ID",
+            "Pricing_Date") # set header to df
+        dbWriteTable(db, "Off_Balance", temp_db_off_balance, append = TRUE)
+      }
       
       #Plotting XTS
       dygraph(temp_xts_draw) %>%
@@ -181,6 +211,9 @@ server <- function(input, output, session) {
   observeEvent(input$clearDB, {
     dbSendStatement(db, "DELETE from Stock_Information")
     dbSendStatement(db, "DELETE from Interest_Rate")
+    dbSendStatement(db, "DELETE from Asset")
+    dbSendStatement(db, "DELETE from Liability")
+    dbSendStatement(db, "DELETE from Off_Balance")
     
     v$doCalcAndPlot <- input$clearStock_InformationDB
     
@@ -217,5 +250,3 @@ server <- function(input, output, session) {
                }))
   
 }
-
-#shinyApp(ui, server)

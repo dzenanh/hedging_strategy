@@ -27,14 +27,15 @@ ui <- dashboardPage(
       badgeLabel = "help!",
       icon = icon("road")
     ),
-    menuItem("Table Explorer", tabName = "tableexplorer", icon = icon("gear"))
+    menuItem("Table Explorer",
+             tabName = "tableexplorer",
+             icon = icon("gear"))
   )),
   
   dashboardBody(
+    #necessary for remote box-collapsing
     useShinyjs(),
-    #necessary for remote box-collapsing
     extendShinyjs(text = jscode),
-    #necessary for remote box-collapsing
     
     tabItems(
       tabItem(
@@ -49,7 +50,6 @@ ui <- dashboardPage(
             collapsible = TRUE,
             
             actionButton("initialReadFile", "Load initial values"),
-            
             dateInput(
               "initialPricingDate",
               "Initial pricing date",
@@ -62,10 +62,8 @@ ui <- dashboardPage(
               value = "2021-01-01",
               min = "2020-01-01"
             ),
-            
             sliderInput("initialStockPrice", "Initial stock price:", 0, 250, 0),
             sliderInput("initialInterestRate", "Interest rate:", 0, 100, 0),
-            
             actionButton("initialSaveFile", "Save initial values") #to ini.rds (all values) and database (interest rate)
           ),
           box(
@@ -77,7 +75,6 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             collapsed = FALSE,
-            
             #  title = "Subsequent Pricings",width = 4, status = "primary", solidHeader = TRUE, collapsible = TRUE,
             textInput(
               "subsequentPricingStock_ID",
