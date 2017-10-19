@@ -1,10 +1,10 @@
-require(shiny)
-require(shinydashboard)
-require(ggplot2)
-require(RSQLite)
-require(shinyjs)
-require(xts)
-require(dygraphs)
+library(shiny)
+library(shinydashboard)
+library(ggplot2)
+library(RSQLite)
+library(shinyjs)
+library(xts)
+library(dygraphs)
 
 #necessary for remote box-collapsing
 jscode <- "
@@ -69,7 +69,6 @@ server <- function(input, output, session) {
     
     v$doCalcAndPlot <- input$addSubsequentPricingObservation
   })
-  
   
   output$timeline <- renderDygraph({
     if (v$doCalcAndPlot == FALSE)

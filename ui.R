@@ -1,8 +1,8 @@
-require(shiny)
+library(shiny)
 library(shinydashboard)
 library(ggplot2)
 library(RSQLite)
-require(shinyjs)
+library(shinyjs)
 library(xts)
 library(dygraphs)
 
@@ -40,7 +40,7 @@ ui <- dashboardPage(
     tabItems(
       tabItem(
         tabName = "forwardpricing",
-        h2("Forward Pricing"),
+        h2("Forward Contracting"),
         fluidRow(
           box(
             title = "Initial Pricing",
@@ -52,13 +52,13 @@ ui <- dashboardPage(
             actionButton("initialReadFile", "Load initial values"),
             dateInput(
               "initialPricingDate",
-              "Initial pricing date",
+              "Date",
               value = "2020-01-01",
               min = "2020-01-01"
             ),
             dateInput(
               "initialMaturityDate",
-              "Maturity date",
+              "Maturity",
               value = "2021-01-01",
               min = "2020-01-01"
             ),
