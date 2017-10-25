@@ -12,18 +12,33 @@ shinyjs.collapse = function(boxid) {
 $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 }
 "
+
 db <- dbConnect(SQLite(), "database.sqlite")
+#db <- dbConnect(SQLite(), "database_forward.sqlite")
+
+
 
 server <- function(input, output, session) {
+  
+  
+  
   observeEvent(input$button_Do, {
     js$collapse("box_Do")
     js$collapse("box_Plan")
+    
+    
+    
+    
+    
   })
   
   observeEvent(input$button_Plan, {
     js$collapse("box_Plan")
     js$collapse("box_Check")
   })
+  
+  #https://stackoverflow.com/questions/19611254/r-shiny-disable-able-shinyui-elements
+  
   
   observeEvent(input$button_Check, {
     js$collapse("box_Check")
