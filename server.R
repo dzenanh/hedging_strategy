@@ -16,6 +16,16 @@ $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 
 db <- dbConnect(SQLite(), "database.sqlite")
 sqlite <- dbConnect(SQLite(), "db.sqlite")
+
+dbSendStatement(sqlite, "DELETE from Stock_Derivative_Static")
+dbSendStatement(sqlite, "DELETE from Stock_Pricing_Dynamic")
+dbSendStatement(sqlite, "DELETE from Derivative_Instrument_Dynamic")
+dbSendStatement(sqlite, "DELETE from Economic_Resource_Risky_Income")
+dbSendStatement(sqlite, "DELETE from Economic_Resource_Fixed_Income")
+dbSendStatement(sqlite, "DELETE from Asset")
+dbSendStatement(sqlite, "DELETE from Liability")
+dbSendStatement(sqlite, "DELETE from Off_Balance")
+
 server <- function(input, output, session) {
   
   observeEvent(input$ab_Initial_Pricing, {
@@ -277,11 +287,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$clearDB, {
-    dbSendStatement(db, "DELETE from Stock_Information")
-    dbSendStatement(db, "DELETE from Interest_Rate")
-    dbSendStatement(db, "DELETE from Asset")
-    dbSendStatement(db, "DELETE from Liability")
-    dbSendStatement(db, "DELETE from Off_Balance")
+
     dbSendStatement(sqlite, "DELETE from Stock_Pricing_Dynamic")
     
     #v$doCalcAndPlot <- input$clearStock_InformationDB
@@ -308,14 +314,36 @@ server <- function(input, output, session) {
                  dbReadTable(sqlite, "Stock_Derivative_Static")
                }))
   
+  observeEvent(input$load_table_Derivative_Instrument_Dynamic,
+               output$table_Derivative_Instrument_Dynamic <- renderDataTable({
+                 dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
+               }))
+  
+  observeEvent(input$load_table_Economic_Resource_Risky_Income,
+               output$table_Economic_Resource_Risky_Income <- renderDataTable({
+                 dbReadTable(sqlite, "Economic_Resource_Risky_Income")
+               }))
+  
+  observeEvent(input$load_table_Economic_Resource_Fixed_Income,
+               output$table_Economic_Resource_Fixed_Income <- renderDataTable({
+                 dbReadTable(sqlite, "Economic_Resource_Fixed_Income")
+               }))
+  
+  
+  
+  observeEvent(input$load_table_Asset,
+               output$table_Asset <- renderDataTable({
+                 dbReadTable(sqlite, "Asset")
+               }))
+  
   observeEvent(input$load_table_Liability,
                output$table_Liability <- renderDataTable({
-                 dbReadTable(db, "Liability")
+                 dbReadTable(sqlite, "Liability")
                }))
   
   observeEvent(input$load_table_Off_Balance,
                output$table_Off_Balance <- renderDataTable({
-                 dbReadTable(db, "Off_Balance")
+                 dbReadTable(sqlite, "Off_Balance")
                }))
   
 }

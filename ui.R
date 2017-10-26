@@ -278,6 +278,51 @@ ui <- dashboardPage(
           ),
           
           box(
+            title = "Table: Derivative_Instrument_Dynamic",
+            width = 12,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            actionButton("load_table_Derivative_Instrument_Dynamic", "Load from database"),
+            dataTableOutput('table_Derivative_Instrument_Dynamic')
+          ),
+          
+          box(
+            title = "Table: Economic_Resource_Risky_Income",
+            width = 12,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            actionButton("load_table_Economic_Resource_Risky_Income", "Load from database"),
+            dataTableOutput('table_Economic_Resource_Risky_Income')
+          ),
+          
+          box(
+            title = "Table: Economic_Resource_Fixed_Income",
+            width = 12,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            actionButton("load_table_Economic_Resource_Fixed_Income", "Load from database"),
+            dataTableOutput('table_Economic_Resource_Fixed_Income')
+          ),
+          
+          
+          box(
+            title = "Table: Asset",
+            width = 12,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            actionButton("load_table_Asset", "Load from database"),
+            dataTableOutput('table_Asset')
+          ),
+          
+          box(
             title = "Table: Liability",
             width = 12,
             align = "center",
