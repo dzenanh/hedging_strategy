@@ -14,7 +14,6 @@ $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 }
 "
 
-#db <- dbConnect(SQLite(), "database.sqlite")
 sqlite <- dbConnect(SQLite(), "db.sqlite")
 
 dbSendStatement(sqlite, "DELETE from Stock_Derivative_Static")
