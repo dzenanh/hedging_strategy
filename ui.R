@@ -5,6 +5,7 @@ library(RSQLite)
 library(shinyjs)
 library(xts)
 library(dygraphs)
+library(V8)
 
 jscode <- "
 shinyjs.collapse = function(boxid) {
@@ -43,39 +44,156 @@ ui <- dashboardPage(
         h2("Forward Contracting"),
         fluidRow(
           box(
+            id = "box_Initial_Pricing",
             title = "Initial Pricing",
             width = 12,
             status = "primary",
             solidHeader = TRUE,
             collapsible = TRUE,
             
-            actionButton("initialReadFile", "Load initial values"),
-            dateInput(
-              "initialPricingDate",
-              "Date",
-              value = "2020-01-01",
-              min = "2020-01-01"
+            #actionButton("initialReadFile", "Load initial values"),
+            column(
+              3,
+              textInput("ti_Type_Of_Stock_Derivative", "Type Of Stock Derivative", "0"),
+              textInput("ti_Stock_ISIN", "Stock ISIN", "AT0001"),
+              textInput("ti_Contract_Size", "Contract Size", "1")
             ),
-            dateInput(
-              "initialMaturityDate",
-              "Maturity",
-              value = "2021-01-01",
-              min = "2020-01-01"
+            
+            column(
+              3,
+              textInput("ti_Number_Of_Contracts", "Number Of Contracts", "1"),
+              textInput("ti_Execution_Or_Forward_Price", "Execution Or Forward Price", "100"),
+              dateInput(
+                "ti_Contracting_Date",
+                "Contracting Date",
+                value = "2020-01-01",
+                min = "2020-01-01"
+              )
             ),
-            sliderInput("initialStockPrice", "Initial stock price:", 0, 250, 0),
-            sliderInput("initialInterestRate", "Interest rate:", 0, 100, 0),
-            actionButton("initialSaveFile", "Save initial values") #to ini.rds (all values) and database (interest rate)
-          ),
+            
+            column(
+              3,
+              dateInput(
+                "ti_Expiration_Date",
+                "Expiration Date",
+                value = "2020-12-31",
+                min = "2020-01-01"
+              ),
+              textInput("ti_Interest_Rate", "Interest Rate in %", "4"),
+              textInput("ti_Stock_Volatility", "Stock Volatility in %", "0")
+                   ),
+            
+            column(
+              3,
+              textInput("ti_Mark_To_Model", "Mark To Model", "1"),
+              actionButton("ab_Initial_Pricing", "Finish Initial Pricing")
+            )
+            ),
+          
           box(
             id = "box_Do",
-            title = "First Step",
+            title = "First Step (Do)",
             width = 3,
             align = "center",
             status = "primary",
             solidHeader = TRUE,
             collapsible = TRUE,
-            collapsed = FALSE,
+            collapsed = TRUE,
             #  title = "Subsequent Pricings",width = 4, status = "primary", solidHeader = TRUE, collapsible = TRUE,
+            
+            dateInput(
+              "ti_Do_timestamp",
+              "Date",
+              value = "2020-01-01",
+              min = "2020-01-01"
+            ),
+            textInput(
+              "ti_Do_Stock_Price",
+              "Stock Price",
+              value = 100
+            ),
+            actionButton("button_Do", "Do")
+            
+            
+          ),
+          
+          box(
+            id = "box_Plan",
+            title = "Second Step (Plan)",
+            width = 3,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            collapsed = TRUE,
+            actionButton("button_Plan", "Plan")
+          ),
+          
+          box(
+            id = "box_Check",
+            title = "Third Step (Check)",
+            width = 3,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            collapsed = TRUE,
+            actionButton("button_Check", "Check")
+          ),
+          
+          box(
+            id = "box_Act",
+            title = "Fourth Step (Act)",
+            width = 3,
+            align = "center",
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            collapsed = TRUE,
+            actionButton("button_Act", "Act"),
+            actionButton("button_Act_Continue", "Continue")
+          ),
+          
+          box(
+            title = "Timeline",
+            width = 12,
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            dygraphOutput("timeline", height = 250)
+          ),
+          box(
+            title = "Initial Pricing OLD",
+            width = 12,
+            status = "primary",
+            solidHeader = TRUE,
+            collapsible = TRUE,
+            collapsed = TRUE,
+            actionButton("initialReadFile", "Load initial values"),
+            column(
+              3,
+              dateInput(
+                "initialPricingDate",
+                "Date",
+                value = "2020-01-01",
+                min = "2020-01-01"
+              )
+            ),
+            column(
+              3,
+              dateInput(
+                "initialMaturityDate",
+                "Maturity",
+                value = "2021-01-01",
+                min = "2020-01-01"
+              )
+            ),
+            sliderInput("initialStockPrice", "Initial stock price:", 0, 250, 0),
+            sliderInput("initialInterestRate", "Interest rate:", 0, 100, 0),
+            actionButton("initialSaveFile", "Save initial values"),
+            
+            
+            #to ini.rds (all values) and database (interest rate)
             textInput(
               "subsequentPricingStock_ID",
               "Stock ID",
@@ -104,51 +222,6 @@ ui <- dashboardPage(
             ),
             actionButton("addSubsequentPricingObservation", "Add Observation!")
             #actionButton("button_Do", "Do")
-          ),
-          
-          box(
-            id = "box_Plan",
-            title = "Second Step",
-            width = 3,
-            align = "center",
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            collapsed = TRUE,
-            actionButton("button_Plan", "Plan")
-          ),
-          
-          box(
-            id = "box_Check",
-            title = "Third Step",
-            width = 3,
-            align = "center",
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            collapsed = TRUE,
-            actionButton("button_Check", "Check")
-          ),
-          
-          box(
-            id = "box_Act",
-            title = "Fourth Step",
-            width = 3,
-            align = "center",
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            collapsed = TRUE,
-            actionButton("button_Act", "Act")
-          ),
-          
-          box(
-            title = "Timeline",
-            width = 12,
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            dygraphOutput("timeline", height = 250)
           )
         )
         
@@ -171,37 +244,37 @@ ui <- dashboardPage(
           ),
           
           box(
-            title = "Table: Stock_Information",
+            title = "Table: Stock_Pricing_Dynamic",
             width = 12,
             align = "center",
             status = "primary",
             solidHeader = TRUE,
             collapsible = TRUE,
-            actionButton("load_table_Stock_Information", "Load from database"),
-            dataTableOutput('table_Stock_Information')
+            actionButton("load_table_Stock_Pricing_Dynamic", "Load from database"),
+            dataTableOutput('table_Stock_Pricing_Dynamic')
           ),
           
           box(
-            title = "Table: Interest_Rate",
+            title = "Table: Stock_Information_Static",
             width = 12,
             align = "center",
             status = "primary",
             solidHeader = TRUE,
             collapsible = TRUE,
-            actionButton("load_table_Interest_Rate", "Load from database"),
-            dataTableOutput('table_Interest_Rate')
+            actionButton("load_table_Stock_Information_Static", "Load from database"),
+            dataTableOutput('table_Stock_Information_Static')
           )
           ,
           
           box(
-            title = "Table: Asset",
+            title = "Table: Stock_Derivative_Static",
             width = 12,
             align = "center",
             status = "primary",
             solidHeader = TRUE,
             collapsible = TRUE,
-            actionButton("load_table_Asset", "Load from database"),
-            dataTableOutput('table_Asset')
+            actionButton("load_table_Stock_Derivative_Static", "Load from database"),
+            dataTableOutput('table_Stock_Derivative_Static')
           ),
           
           box(

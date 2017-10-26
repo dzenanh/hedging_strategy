@@ -5,6 +5,7 @@ library(RSQLite)
 library(shinyjs)
 library(xts)
 library(dygraphs)
+library(V8)
 
 #necessary for remote box-collapsing
 jscode <- "
@@ -14,26 +15,70 @@ $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 "
 
 db <- dbConnect(SQLite(), "database.sqlite")
-#db <- dbConnect(SQLite(), "database_forward.sqlite")
-
-
-
+sqlite <- dbConnect(SQLite(), "db.sqlite")
 server <- function(input, output, session) {
   
-  
-  
-  observeEvent(input$button_Do, {
+  observeEvent(input$ab_Initial_Pricing, {
+    #js$collapse("box_Initial_Pricing")
     js$collapse("box_Do")
+    hide(id = "box_Initial_Pricing", anim = FALSE)
+    
+    temp_db_Stock_Derivative_Static <-
+      cbind.data.frame(
+        input$ti_Type_Of_Stock_Derivative,
+        input$ti_Stock_ISIN,
+        input$ti_Execution_Or_Forward_Price,
+        as.character(input$ti_Contracting_Date),
+        as.character(input$ti_Expiration_Date),
+        input$ti_Contract_Size,
+        input$ti_Number_Of_Contracts,
+        input$ti_Stock_Volatility,
+        input$ti_Interest_Rate,
+        input$ti_Mark_To_Model
+      )
+    names(temp_db_Stock_Derivative_Static) <-
+      c(
+        "Type_Of_Stock_Derivative",
+        "Stock_ISIN",
+        "Execution_Or_Forward_Price",
+        "Contracting_Date",
+        "Expiration_Date",
+        "Contract_Size",
+        "Number_Of_Contracts",
+        "Stock_Volatility",
+        "Interest_Rate",
+        "Mark_To_Model"
+      )
+    dbWriteTable(sqlite,
+                 "Stock_Derivative_Static",
+                 temp_db_Stock_Derivative_Static,
+                 append = TRUE)
+  })
+  observeEvent(input$button_Do, {
+    temp_db_Stock_Pricing_Dynamic <-
+      cbind.data.frame(
+        input$ti_Stock_ISIN,
+        input$ti_Do_Stock_Price,
+        as.character(input$ti_Do_timestamp)
+      )
+    names(temp_db_Stock_Pricing_Dynamic) <-
+      c(
+        "Stock_ISIN",
+        "Stock_Price",
+        "timestamp"
+      ) 
+    dbWriteTable(sqlite,
+                 "Stock_Pricing_Dynamic",
+                 temp_db_Stock_Pricing_Dynamic,
+                 append = TRUE)
+    
+    
+    #js$collapse("box_Do")
     js$collapse("box_Plan")
-    
-    
-    
-    
-    
   })
   
   observeEvent(input$button_Plan, {
-    js$collapse("box_Plan")
+    #js$collapse("box_Plan")
     js$collapse("box_Check")
   })
   
@@ -41,13 +86,20 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$button_Check, {
-    js$collapse("box_Check")
+    #js$collapse("box_Check")
     js$collapse("box_Act")
   })
   
   observeEvent(input$button_Act, {
+
+    v$doCalcAndPlot <- input$button_Act #CalcAndPlot
+  })
+  
+  observeEvent(input$button_Act_Continue, {
     js$collapse("box_Act")
-    js$collapse("box_Do")
+    js$collapse("box_Plan")
+    js$collapse("box_Check")
+    #js$collapse("box_Do")
   })
   
   v <- reactiveValues(doCalcAndPlot = FALSE) #recalc and redraw
@@ -77,6 +129,7 @@ server <- function(input, output, session) {
       session,
       "subsequentPricingDate",
       value = isolate(input$subsequentPricingDate + 1),
+      
       js$collapse("box_Do"),
       js$collapse("box_Plan")
       
@@ -89,27 +142,30 @@ server <- function(input, output, session) {
     if (v$doCalcAndPlot == FALSE)
       return()
     isolate({
-      temp_db_draw <- dbReadTable(db, "Stock_Information")
-      temp_db_draw$Pricing_Date <-
-        as.Date(as.POSIXct(temp_db_draw$Pricing_Date))
       
-      #CALC
-      #Wiki says that the gregorian calender has 365.2425 days... 365.2425/7=52.1775
-      #as.numeric(difftime(as.Date("2003-04-05"), as.Date("2001-01-01"), unit="weeks"))/52.1775
-      #Composing temp_db_draw for
+      
+      temp_db_draw <- dbReadTable(sqlite, "Stock_Pricing_Dynamic")
+      temp_db_draw$Pricing_Date <- as.Date(as.POSIXct(temp_db_draw$timestamp))
+      
+      #get initial pricing
+      
+      #temp_db_draw <- dbReadTable(db, "Stock_Information")
+      #temp_db_draw$Pricing_Date <-
+       # as.Date(as.POSIXct(temp_db_draw$Pricing_Date))
+      
       temp_db_draw$TtM <-
         as.numeric(difftime(
-          as.Date(isolate(input$initialMaturityDate)),
+          as.Date(isolate(input$ti_Expiration_Date)),
           as.Date(temp_db_draw$Pricing_Date),
           unit = "weeks"
         )) / 52.1775
-      temp_db_draw$Interest_Rate <- input$initialInterestRate / 100
+      temp_db_draw$Interest_Rate <- as.numeric(input$ti_Interest_Rate) / 100
       temp_db_draw$Interest_Rate_Cont <-
         log(1 + temp_db_draw$Interest_Rate)
       temp_db_draw$F_Price <-
-        input$initialStockPrice * (1 + input$initialInterestRate / 100) ^ (as.numeric(difftime(
-          as.Date(input$initialMaturityDate),
-          as.Date(input$initialPricingDate),
+        temp_db_draw[1,3] * (1 + as.numeric(input$ti_Interest_Rate) / 100) ^ (as.numeric(difftime(
+          as.Date(input$ti_Expiration_Date),
+          as.Date(input$ti_Contracting_Date),
           unit = "weeks"
         )) / 52.1775)
       temp_db_draw$Liability <-
@@ -118,16 +174,17 @@ server <- function(input, output, session) {
       temp_db_draw$'Forward Value' <-
         round(temp_db_draw$Liability + temp_db_draw$Stock_Price, 1)
       
+      write.csv(temp_db_draw, "tempdb.csv")
+      
       #Composing XTS
       temp_xts_draw <-
-        xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value")], order.by =
-              temp_db_draw[, 6])
+        xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value", "TtM")], order.by =
+              temp_db_draw[, 5])
       
       #Deciding whether Asset, Liability of Off Balance
       
       if (tail(temp_db_draw$'Forward Value', 1) > 0) {
         #Asset
-        
         temp_db_asset <-
           cbind.data.frame(
             "1",
@@ -141,10 +198,8 @@ server <- function(input, output, session) {
             "Fair_Value",
             "Mark_to_Model") # set header to df
         dbWriteTable(db, "Asset", temp_db_asset, append = TRUE)
-        
       } else if (tail(temp_db_draw$'Forward Value', 1) < 0) {
         #Liability
-        
         temp_db_liability <-
           cbind.data.frame(
             "1",
@@ -159,7 +214,6 @@ server <- function(input, output, session) {
             "Mark_to_Model") # set header to df
         dbWriteTable(db, "Liability", temp_db_liability, append = TRUE)
       } 
-      
       else {
         # Off_Balance
         temp_db_off_balance <-
@@ -228,29 +282,30 @@ server <- function(input, output, session) {
     dbSendStatement(db, "DELETE from Asset")
     dbSendStatement(db, "DELETE from Liability")
     dbSendStatement(db, "DELETE from Off_Balance")
+    dbSendStatement(sqlite, "DELETE from Stock_Pricing_Dynamic")
     
-    v$doCalcAndPlot <- input$clearStock_InformationDB
+    #v$doCalcAndPlot <- input$clearStock_InformationDB
     
   })
   
   
   observeEvent(
-    input$load_table_Stock_Information,
-    output$table_Stock_Information <- renderDataTable({
-      dbReadTable(db, "Stock_Information")
+    input$load_table_Stock_Pricing_Dynamic,
+    output$table_Stock_Pricing_Dynamic <- renderDataTable({
+      dbReadTable(sqlite, "Stock_Pricing_Dynamic")
     })
   )
   
   observeEvent(
-    input$load_table_Interest_Rate,
-    output$table_Interest_Rate <- renderDataTable({
-      dbReadTable(db, "Interest_Rate")
+    input$load_table_Stock_Information_Static,
+    output$table_Stock_Information_Static <- renderDataTable({
+      dbReadTable(sqlite, "Stock_Information_Static")
     })
   )
   
-  observeEvent(input$load_table_Asset,
-               output$table_Asset <- renderDataTable({
-                 dbReadTable(db, "Asset")
+  observeEvent(input$load_table_Stock_Derivative_Static,
+               output$table_Stock_Derivative_Static <- renderDataTable({
+                 dbReadTable(sqlite, "Stock_Derivative_Static")
                }))
   
   observeEvent(input$load_table_Liability,
