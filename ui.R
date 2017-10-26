@@ -161,70 +161,8 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             dygraphOutput("timeline", height = 250)
-          ),
-          box(
-            title = "Initial Pricing OLD",
-            width = 12,
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            collapsed = TRUE,
-            actionButton("initialReadFile", "Load initial values"),
-            column(
-              3,
-              dateInput(
-                "initialPricingDate",
-                "Date",
-                value = "2020-01-01",
-                min = "2020-01-01"
-              )
-            ),
-            column(
-              3,
-              dateInput(
-                "initialMaturityDate",
-                "Maturity",
-                value = "2021-01-01",
-                min = "2020-01-01"
-              )
-            ),
-            sliderInput("initialStockPrice", "Initial stock price:", 0, 250, 0),
-            sliderInput("initialInterestRate", "Interest rate:", 0, 100, 0),
-            actionButton("initialSaveFile", "Save initial values"),
-            
-            
-            #to ini.rds (all values) and database (interest rate)
-            textInput(
-              "subsequentPricingStock_ID",
-              "Stock ID",
-              value = 1,
-              width = 150
-            ),
-            textInput(
-              "subsequentPricingStock_Derivative",
-              "Stock Derivative ID",
-              value = 1,
-              width = 150
-            ),
-            dateInput(
-              "subsequentPricingDate",
-              "Actual pricing date",
-              value = "2020-01-01",
-              min = "2020-01-01"
-            ),
-            sliderInput("subsequentStockPrice", "Actual stock price:", 0, 250, 0),
-            sliderInput(
-              "subsequentPricingVolatility",
-              "Actual stock volatility",
-              0,
-              100,
-              0
-            ),
-            actionButton("addSubsequentPricingObservation", "Add Observation!")
-            #actionButton("button_Do", "Do")
           )
         )
-        
       ),
       
       tabItem(tabName = "optionpricing",
@@ -234,15 +172,7 @@ ui <- dashboardPage(
         tabName = "tableexplorer",
         h2("Table Explorer"),
         fluidRow(
-          box(
-            title = "Database Control",
-            width = 12,
-            status = "primary",
-            solidHeader = TRUE,
-            collapsible = TRUE,
-            actionButton("clearDB", "Clear all database tables")
-          ),
-          
+
           box(
             title = "Table: Stock_Pricing_Dynamic",
             width = 12,
