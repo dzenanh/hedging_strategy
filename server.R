@@ -29,7 +29,6 @@ dbSendStatement(sqlite, "DELETE from Off_Balance")
 server <- function(input, output, session) {
   
   observeEvent(input$ab_Initial_Pricing, {
-    #js$collapse("box_Initial_Pricing")
     js$collapse("box_Do")
     hide(id = "box_Initial_Pricing", anim = FALSE)
     
@@ -109,7 +108,6 @@ server <- function(input, output, session) {
     js$collapse("box_Act")
     js$collapse("box_Plan")
     js$collapse("box_Check")
-    #js$collapse("box_Do")
   })
   
   v <- reactiveValues(doCalcAndPlot = FALSE) #recalc and redraw
@@ -153,7 +151,6 @@ server <- function(input, output, session) {
       return()
     isolate({
       
-      
       temp_db_draw <- dbReadTable(sqlite, "Stock_Pricing_Dynamic")
       temp_db_draw$Pricing_Date <- as.Date(as.POSIXct(temp_db_draw$timestamp))
       
@@ -184,55 +181,104 @@ server <- function(input, output, session) {
       temp_db_draw$'Forward Value' <-
         round(temp_db_draw$Liability + temp_db_draw$Stock_Price, 1)
       
-      write.csv(temp_db_draw, "tempdb.csv")
+      write.csv(tail(temp_db_draw$'Forward Value'), "tempdb.csv")
       
       #Composing XTS
       temp_xts_draw <-
-        xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value", "TtM")], order.by =
+        xts(x = temp_db_draw[, c("Asset", "Liability", "Forward Value")], order.by =
               temp_db_draw[, 5])
       
-      #Deciding whether Asset, Liability of Off Balance
       
+      #Derivative_Instrument_Dynamic entry
+      temp_Stock_Derivative_Static <- dbReadTable(sqlite, "Stock_Derivative_Static")
+      temp_db_Derivative_Instrument_Dynamic <-
+        cbind.data.frame(
+          tail(temp_Stock_Derivative_Static$Stock_Derivative_ID, 1),
+          as.character(input$ti_Do_timestamp),
+          tail(temp_db_draw$'Forward Value', 1)
+        )
+      names(temp_db_Derivative_Instrument_Dynamic) <-
+        c("Stock_Derivative_ID",
+          "timestamp",
+          "Fair_Value")
+      dbWriteTable(sqlite, "Derivative_Instrument_Dynamic", temp_db_Derivative_Instrument_Dynamic, append = TRUE)
+      
+      #Economic_Resource_Risky_Income entry
+      temp_Derivative_Instrument_Dynamic <- dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
+      temp_db_Economic_Resource_Risky_Income <-
+        cbind.data.frame(
+          tail(temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID, 1),
+          as.character(input$ti_Do_timestamp),
+          1,
+          tail(temp_db_draw$'Asset', 1),
+          1
+        )
+      names(temp_db_Economic_Resource_Risky_Income) <-
+        c("Derivative_Instrument_ID",
+          "timestamp",
+          "Nd1t",
+          "Value",
+          "Asset_Or_Liability")
+      dbWriteTable(sqlite, "Economic_Resource_Risky_Income", temp_db_Economic_Resource_Risky_Income, append = TRUE)
+      
+      #Economic_Resource_Fixed_Income entry
+      temp_Derivative_Instrument_Dynamic <- dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
+      temp_db_Economic_Resource_Fixed_Income <-
+        cbind.data.frame(
+          tail(temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID, 1),
+          as.character(input$ti_Do_timestamp),
+          tail(temp_db_draw$'Liability', 1),
+          1
+        )
+      names(temp_db_Economic_Resource_Fixed_Income) <-
+        c("Derivative_Instrument_ID",
+          "timestamp",
+          "Present_Value",
+          "Asset_Or_Liability")
+      dbWriteTable(sqlite, "Economic_Resource_Fixed_Income", temp_db_Economic_Resource_Fixed_Income, append = TRUE)
+      
+      #Asset, Liability of Off Balance
       if (tail(temp_db_draw$'Forward Value', 1) > 0) {
         #Asset
+        temp_Derivative_Instrument_Dynamic <- dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
         temp_db_asset <-
           cbind.data.frame(
-            "1",
-            as.character(input$subsequentPricingDate),
-            tail(temp_db_draw$'Forward Value', 1),
-            1
+            tail(temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID, 1),
+            as.character(input$ti_Do_timestamp),
+            tail(temp_Derivative_Instrument_Dynamic$Fair_Value, 1)
           )
         names(temp_db_asset) <-
-          c("Derivative_ID",
-            "Pricing_Date",
-            "Fair_Value",
-            "Mark_to_Model") # set header to df
-        dbWriteTable(db, "Asset", temp_db_asset, append = TRUE)
+          c("Derivative_Instrument_ID",
+            "timestamp",
+            "Fair_Value")
+        dbWriteTable(sqlite, "Asset", temp_db_asset, append = TRUE)
       } else if (tail(temp_db_draw$'Forward Value', 1) < 0) {
         #Liability
+        temp_Derivative_Instrument_Dynamic <- dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
         temp_db_liability <-
           cbind.data.frame(
-            "1",
-            as.character(input$subsequentPricingDate),
-            tail(temp_db_draw$'Forward Value', 1),
-            1
+            tail(temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID, 1),
+            as.character(input$ti_Do_timestamp),
+            tail(temp_Derivative_Instrument_Dynamic$Fair_Value, 1)
           )
         names(temp_db_liability) <-
-          c("Derivative_ID",
-            "Pricing_Date",
-            "Fair_Value",
-            "Mark_to_Model") # set header to df
-        dbWriteTable(db, "Liability", temp_db_liability, append = TRUE)
+          c("Derivative_Instrument_ID",
+            "timestamp",
+            "Fair_Value")
+        dbWriteTable(sqlite, "Liability", temp_db_liability, append = TRUE)
       } 
       else {
         # Off_Balance
+        temp_Derivative_Instrument_Dynamic <- dbReadTable(sqlite, "Derivative_Instrument_Dynamic")
         temp_db_off_balance <-
-          cbind.data.frame("1",
-                           as.character(input$subsequentPricingDate))
+          cbind.data.frame(
+            tail(temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID, 1),
+            as.character(input$ti_Do_timestamp)
+          )
         names(temp_db_off_balance) <-
-          c("Derivative_ID",
-            "Pricing_Date") # set header to df
-        dbWriteTable(db, "Off_Balance", temp_db_off_balance, append = TRUE)
+          c("Derivative_Instrument_ID",
+            "timestamp")
+        dbWriteTable(sqlite, "Off_Balance", temp_db_off_balance, append = TRUE)
       }
       
       #Plotting XTS
