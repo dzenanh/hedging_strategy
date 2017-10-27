@@ -7,6 +7,7 @@ library(xts)
 library(dygraphs)
 library(V8)
 
+
 #necessary for remote box-collapsing
 jscode <- "
 shinyjs.collapse = function(boxid) {

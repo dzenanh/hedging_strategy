@@ -7,6 +7,7 @@ library(xts)
 library(dygraphs)
 library(V8)
 
+
 jscode <- "
 shinyjs.collapse = function(boxid) {
 $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
@@ -126,6 +127,7 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             collapsed = TRUE,
+            p("N(d1) = 1"),
             actionButton("button_Plan", "Plan")
           ),
           
@@ -138,6 +140,7 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             collapsed = TRUE,
+            p("ΔN(d1) = 0"),
             actionButton("button_Check", "Check")
           ),
           
@@ -151,6 +154,7 @@ ui <- dashboardPage(
             collapsible = TRUE,
             collapsed = TRUE,
             actionButton("button_Act", "Act"),
+            p("Forward: No action possible"),
             actionButton("button_Act_Continue", "Continue")
           ),
           
