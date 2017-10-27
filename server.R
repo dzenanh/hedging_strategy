@@ -25,7 +25,7 @@ server <- function(input, output, session) {
       cbind.data.frame(
         input$ti_Type_Of_Stock_Derivative,
         input$ti_Stock_ISIN,
-        input$ti_Execution_Or_Forward_Price,
+        input$ti_Exercise_Or_Forward_Price,
         as.character(input$ti_Contracting_Date),
         as.character(input$ti_Expiration_Date),
         input$ti_Contract_Size,
@@ -38,7 +38,7 @@ server <- function(input, output, session) {
       c(
         "Type_Of_Stock_Derivative",
         "Stock_ISIN",
-        "Execution_Or_Forward_Price",
+        "Exercise_Or_Forward_Price",
         "Contracting_Date",
         "Expiration_Date",
         "Contract_Size",

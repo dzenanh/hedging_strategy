@@ -65,7 +65,7 @@ ui <- dashboardPage(
             column(
               3,
               textInput("ti_Number_Of_Contracts", "Number Of Contracts", "1"),
-              textInput("ti_Execution_Or_Forward_Price", "Execution Or Forward Price", "100"),
+              textInput("ti_Exercise_Or_Forward_Price", "Exercise Or Forward Price", "100"),
               dateInput(
                 "ti_Contracting_Date",
                 "Contracting Date",
