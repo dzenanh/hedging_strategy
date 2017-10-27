@@ -17,15 +17,6 @@ $('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
 
 sqlite <- dbConnect(SQLite(), "db.sqlite")
 
-dbSendStatement(sqlite, "DELETE from Stock_Derivative_Static")
-dbSendStatement(sqlite, "DELETE from Stock_Pricing_Dynamic")
-dbSendStatement(sqlite, "DELETE from Derivative_Instrument_Dynamic")
-dbSendStatement(sqlite, "DELETE from Economic_Resource_Risky_Income")
-dbSendStatement(sqlite, "DELETE from Economic_Resource_Fixed_Income")
-dbSendStatement(sqlite, "DELETE from Asset")
-dbSendStatement(sqlite, "DELETE from Liability")
-dbSendStatement(sqlite, "DELETE from Off_Balance")
-
 server <- function(input, output, session) {
   observeEvent(input$ab_Initial_Pricing, {
     js$collapse("box_Do")
@@ -105,6 +96,19 @@ server <- function(input, output, session) {
     js$collapse("box_Plan")
     js$collapse("box_Check")
   })
+  
+  observeEvent(input$reset_db, {
+    dbSendStatement(sqlite, "DELETE from Stock_Derivative_Static")
+    dbSendStatement(sqlite, "DELETE from Stock_Pricing_Dynamic")
+    dbSendStatement(sqlite, "DELETE from Derivative_Instrument_Dynamic")
+    dbSendStatement(sqlite, "DELETE from Economic_Resource_Risky_Income")
+    dbSendStatement(sqlite, "DELETE from Economic_Resource_Fixed_Income")
+    dbSendStatement(sqlite, "DELETE from Asset")
+    dbSendStatement(sqlite, "DELETE from Liability")
+    dbSendStatement(sqlite, "DELETE from Off_Balance")
+  })
+  
+
   
   v <- reactiveValues(doCalcAndPlot = FALSE) #recalc and redraw
   

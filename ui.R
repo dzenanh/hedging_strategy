@@ -32,7 +32,10 @@ ui <- dashboardPage(
     menuItem("Table Explorer",
              tabName = "tableexplorer",
              icon = icon("gear"))
-  )),
+    
+    
+  ),
+  actionButton("reset_db", "Reset Database")),
   
   dashboardBody(
     #necessary for remote box-collapsing
