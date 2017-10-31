@@ -69,12 +69,12 @@ server <- function(input, output, session) {
                  append = TRUE)
     
     
-    #js$collapse("box_Do")
     js$collapse("box_Plan")
   })
   
   observeEvent(input$button_Plan, {
-    #js$collapse("box_Plan")
+    
+    output$to_Plan <- renderText("N(d1) = 1")
     js$collapse("box_Check")
   })
   
@@ -82,11 +82,12 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$button_Check, {
-    #js$collapse("box_Check")
+    output$to_Check <- renderText("Delta N(d1) = 0")
     js$collapse("box_Act")
   })
   
   observeEvent(input$button_Act, {
+    output$to_Act <- renderText("Forward: No action possible")
     v$doCalcAndPlot <- input$button_Act #CalcAndPlot
   })
   
@@ -94,6 +95,11 @@ server <- function(input, output, session) {
     js$collapse("box_Act")
     js$collapse("box_Plan")
     js$collapse("box_Check")
+    
+    output$to_Plan <- renderText("")
+    output$to_Check <- renderText("")
+    output$to_Act <- renderText("")
+    
   })
   
   observeEvent(input$reset_db, {

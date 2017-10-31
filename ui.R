@@ -129,8 +129,8 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             collapsed = TRUE,
-            p("N(d1) = 1"),
-            actionButton("button_Plan", "Plan")
+            actionButton("button_Plan", "Plan"),
+            verbatimTextOutput("to_Plan", placeholder = TRUE)
           ),
           
           box(
@@ -142,8 +142,8 @@ ui <- dashboardPage(
             solidHeader = TRUE,
             collapsible = TRUE,
             collapsed = TRUE,
-            p("ΔN(d1) = 0"),
-            actionButton("button_Check", "Check")
+            actionButton("button_Check", "Check"),
+            verbatimTextOutput("to_Check", placeholder = TRUE)
           ),
           
           box(
@@ -156,7 +156,7 @@ ui <- dashboardPage(
             collapsible = TRUE,
             collapsed = TRUE,
             actionButton("button_Act", "Act"),
-            p("Forward: No action possible"),
+            verbatimTextOutput("to_Act", placeholder = TRUE),
             actionButton("button_Act_Continue", "Continue")
           ),
           
