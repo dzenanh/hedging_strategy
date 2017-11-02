@@ -158,12 +158,12 @@ server <- function(input, output, session) {
         dbReadTable(sqlite, "Stock_Derivative_Static")
       temp_db_Derivative_Instrument_Dynamic <-
         cbind.data.frame(
-          tail(temp_Stock_Derivative_Static$Stock_Derivative_ID, 1),
+          tail(temp_Stock_Derivative_Static$Stock_Derivative_Static_ID, 1),
           as.character(input$ti_Do_timestamp),
           tail(temp_db_draw$'Forward Value', 1)
         )
       names(temp_db_Derivative_Instrument_Dynamic) <-
-        c("Stock_Derivative_ID",
+        c("Stock_Derivative_Static_ID",
           "timestamp",
           "Fair_Value")
       dbWriteTable(
@@ -179,7 +179,7 @@ server <- function(input, output, session) {
       temp_db_Economic_Resource_Risky_Income <-
         cbind.data.frame(
           tail(
-            temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID,
+            temp_Derivative_Instrument_Dynamic$Derivative_Instrument_Dynamic_ID,
             1
           ),
           as.character(input$ti_Do_timestamp),
@@ -189,7 +189,7 @@ server <- function(input, output, session) {
         )
       names(temp_db_Economic_Resource_Risky_Income) <-
         c(
-          "Derivative_Instrument_ID",
+          "Derivative_Instrument_Dynamic_ID",
           "timestamp",
           "Nd1t",
           "Value",
@@ -208,7 +208,7 @@ server <- function(input, output, session) {
       temp_db_Economic_Resource_Fixed_Income <-
         cbind.data.frame(
           tail(
-            temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID,
+            temp_Derivative_Instrument_Dynamic$Derivative_Instrument_Dynamic_ID,
             1
           ),
           as.character(input$ti_Do_timestamp),
@@ -217,7 +217,7 @@ server <- function(input, output, session) {
         )
       names(temp_db_Economic_Resource_Fixed_Income) <-
         c(
-          "Derivative_Instrument_ID",
+          "Derivative_Instrument_Dynamic_ID",
           "timestamp",
           "Present_Value",
           "Asset_Or_Liability"
@@ -237,14 +237,14 @@ server <- function(input, output, session) {
         temp_db_asset <-
           cbind.data.frame(
             tail(
-              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID,
+              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_Dynamic_ID,
               1
             ),
             as.character(input$ti_Do_timestamp),
             tail(temp_Derivative_Instrument_Dynamic$Fair_Value, 1)
           )
         names(temp_db_asset) <-
-          c("Derivative_Instrument_ID",
+          c("Derivative_Instrument_Dynamic_ID",
             "timestamp",
             "Fair_Value")
         dbWriteTable(sqlite, "Asset", temp_db_asset, append = TRUE)
@@ -255,14 +255,14 @@ server <- function(input, output, session) {
         temp_db_liability <-
           cbind.data.frame(
             tail(
-              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID,
+              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_Dynamic_ID,
               1
             ),
             as.character(input$ti_Do_timestamp),
             tail(temp_Derivative_Instrument_Dynamic$Fair_Value, 1)
           )
         names(temp_db_liability) <-
-          c("Derivative_Instrument_ID",
+          c("Derivative_Instrument_Dynamic_ID",
             "timestamp",
             "Fair_Value")
         dbWriteTable(sqlite, "Liability", temp_db_liability, append = TRUE)
@@ -274,13 +274,13 @@ server <- function(input, output, session) {
         temp_db_off_balance <-
           cbind.data.frame(
             tail(
-              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_ID,
+              temp_Derivative_Instrument_Dynamic$Derivative_Instrument_Dynamic_ID,
               1
             ),
             as.character(input$ti_Do_timestamp)
           )
         names(temp_db_off_balance) <-
-          c("Derivative_Instrument_ID",
+          c("Derivative_Instrument_Dynamic_ID",
             "timestamp")
         dbWriteTable(sqlite, "Off_Balance", temp_db_off_balance, append = TRUE)
       }
