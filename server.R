@@ -104,10 +104,22 @@ server <- function(input, output, session) {
     
     #print(P_A_0/X_0_t)
     
+    # d1
     d_1_0 = (log(P_A_0/X_0_t) + (r_0_t + (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
+    # d2
+    d_2_0 = (log(P_A_0/X_0_t) + (r_0_t - (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     print(d_1_0)
     
     N_d_1 = pnorm(d_1_0)
+    N_d_2 = pnorm(d_2_0)
+    
+    ASSET = P_A_0 * N_d_1
+    LIABILITY = X_0_t * exp((-(r_0_t) * T_0_t)) * N_d_2
+    
+    # forward value
+    FV = ASSET - LIABILITY
+    
+    print(FV)
     
     output$to_Plan <- renderText(as.character(N_d_1))#renderText("N(d1) =", str(stock_price))
     js$collapse("box_Check")
