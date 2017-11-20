@@ -74,7 +74,44 @@ server <- function(input, output, session) {
   
   observeEvent(input$button_Plan, {
     
-    output$to_Plan <- renderText("N(d1) = 1")
+    temp_db_Stock_Pricing_Dynamic <-
+      cbind.data.frame(
+        input$ti_Stock_ISIN,
+        input$ti_Do_Stock_Price,
+        as.character(input$ti_Do_timestamp)
+      )
+    names(temp_db_Stock_Pricing_Dynamic) <-
+      c("Stock_ISIN",
+        "Stock_Price",
+        "timestamp")
+    
+    print(temp_db_Stock_Pricing_Dynamic)
+    
+    
+    
+    #print(r_interest_rate)
+    #print(volatility)
+    
+    ###
+    # calculate d1_t
+    ###
+    X_0_t = as.numeric(input$ti_Do_Stock_Price)
+    r_0_t = as.numeric(input$ti_Interest_Rate)/ 100
+    volatility = as.numeric(input$ti_Stock_Volatility)/ 100
+    # is not working -> 100 becomes 1
+    #P_A_0 = as.integer(temp_db_Stock_Pricing_Dynamic$Stock_Price)
+    P_A_0 = as.numeric(input$ti_Do_Stock_Price)
+    # Time_to_maturity -> how to calculate? 
+    T_0_t = 1
+    
+    print(P_A_0/X_0_t)
+    
+    d_1_0 = (log(P_A_0/X_0_t) + (r_0_t + (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
+    print(d_1_0)
+    
+    N_d_1 = pnorm(d_1_0)
+    
+    output$to_Plan <- renderText(as.character(N_d_1))#renderText("N(d1) =", str(stock_price))
     js$collapse("box_Check")
   })
   
