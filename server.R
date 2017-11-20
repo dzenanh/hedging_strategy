@@ -85,10 +85,7 @@ server <- function(input, output, session) {
         "Stock_Price",
         "timestamp")
     
-    print(temp_db_Stock_Pricing_Dynamic)
-    
-    
-    
+    #print(temp_db_Stock_Pricing_Dynamic)
     #print(r_interest_rate)
     #print(volatility)
     
@@ -101,10 +98,11 @@ server <- function(input, output, session) {
     # is not working -> 100 becomes 1
     #P_A_0 = as.integer(temp_db_Stock_Pricing_Dynamic$Stock_Price)
     P_A_0 = as.numeric(input$ti_Do_Stock_Price)
-    # Time_to_maturity -> how to calculate? 
+    
+    # Time_to_maturity -> how to calculate? (inDays(End - Current)?) 
     T_0_t = 1
     
-    print(P_A_0/X_0_t)
+    #print(P_A_0/X_0_t)
     
     d_1_0 = (log(P_A_0/X_0_t) + (r_0_t + (volatility^2)/2) * T_0_t)/(volatility*sqrt(T_0_t))
     print(d_1_0)
